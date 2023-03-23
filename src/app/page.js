@@ -1,10 +1,54 @@
+'use client'
+
 import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from './page.module.css'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+
+  const router = useRouter();
+
+
+  const url = new URL(window.location.href)
+  const [authCode, setAuthCode] = useState(null);
+  console.log(router);
+  console.log(url, url.searchParams.get('code'));
+
+  useEffect(() => {
+    
+    if (url.searchParams.get('code')) {
+      const data = {
+        'grant_type': 'authorization_code',
+        'client_id': process.env.NEXT_PUBLIC_JIRA_CLIENT_ID,
+        'client_secret': process.env.NEXT_PUBLIC_JIRA_CLIENT_SECRET,
+        'code': url.searchParams.get('code'),
+        'redirect_uri': process.env.NEXT_PUBLIC_REDIRECT_URI
+      };
+      setAuthCode(url.searchParams.get('code'));
+      // TODO: make post request to get token info
+      fetch('/api/jiraAuth', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+        .then((res) => {
+          console.log('res', res);
+          return res.text();
+        })
+        .then((data) => {
+          console.log('data', data);
+        })
+        .catch((err) => {
+          console.error(err);
+        })
+    }
+  }, [url]);
   return (
     <main className={styles.main}>
       <div className={styles.description}>
@@ -30,16 +74,19 @@ export default function Home() {
           </a>
         </div>
       </div>
-
+    
       <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+        <a href={`${process.env.NEXT_PUBLIC_JIRA_AUTH_CODE_URL}`}>
+          <Image
+            className={styles.logo}
+            src="/next.svg"
+            alt="Next.js Logo"
+            width={180}
+            height={37}
+            priority
+          />
+        </a>
+
         <div className={styles.thirteen}>
           <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
         </div>
